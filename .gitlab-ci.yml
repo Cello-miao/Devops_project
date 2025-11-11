@@ -9,9 +9,10 @@ stages:
 
 variables:
   DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
 
 services:
-  - docker:dind
+  - docker:27-dind
 
 cache:
   paths:
@@ -25,7 +26,7 @@ before_script:
 # Build frontend Docker image
 build_frontend:
   stage: build
-  image: docker:stable
+  image: docker:27
   script:
     - docker build -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
       -f frontend/Dockerfile frontend/
@@ -35,7 +36,7 @@ build_frontend:
 # Build backend Docker image
 build_backend:
   stage: build
-  image: docker:stable
+  image: docker:27
   script:
     - docker build -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA"
       -f backend/Dockerfile backend/
@@ -70,7 +71,7 @@ test_frontend:
 # Push images to registry
 push_images:
   stage: push
-  image: docker:stable
+  image: docker:27
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login
       -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
