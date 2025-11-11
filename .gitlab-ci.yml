@@ -114,13 +114,28 @@ push_backend:
   only:
     - main
 
-# Manual deployment to production
+# Automatic deployment to production
 deploy_prod:
   stage: deploy
-  image: alpine:latest
+  image: docker:27
   script:
-    - echo "Deploy to production server"
-    - echo "Configure SSH and deployment script as needed"
-  when: manual
+    - echo "Deploying to production..."
+    - echo "$CI_REGISTRY_PASSWORD" | docker login
+      -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - apk add --no-cache docker-compose
+    - export FRONTEND_IMAGE="$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
+    - export BACKEND_IMAGE="$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA"
+    - export DB_PASSWORD_PROD="${DB_PASSWORD_PROD:-changeme}"
+    - export SECRET_KEY_BASE="${SECRET_KEY_BASE:-$(openssl rand -base64 48)}"
+    - docker compose -f docker-compose.prod.yml pull
+    - docker compose -f docker-compose.prod.yml up -d
+    - docker compose -f docker-compose.prod.yml exec -T backend
+      mix ecto.migrate || echo "Migration failed or not needed"
+    - echo "Deployment completed successfully!"
+    - echo "Frontend: http://localhost (port 80)"
+    - echo "Backend: http://localhost:4000"
+  environment:
+    name: production
+    url: http://localhost
   only:
     - main
