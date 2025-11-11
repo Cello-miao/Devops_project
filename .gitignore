@@ -1,0 +1,59 @@
+# Node
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Vite / build
+dist/
+build/
+*.local
+
+# Elixir
+_build/
+deps/
+erl_crash.dump
+*.ez
+*.beam
+/.elixir_ls/
+/priv/static/
+
+# Phoenix
+/priv/static/assets/
+/priv/static/cache_manifest.json
+
+# Database
+*.db
+*.db-*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Env files
+.env
+.env.*
+!.env.*.template
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+.history
+.cache
+coverage/
+*.coverdata

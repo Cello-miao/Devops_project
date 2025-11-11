@@ -1,0 +1,91 @@
+---
+# GitLab CI/CD Pipeline for DevOps Project
+
+stages:
+  - build
+  - test
+  - push
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+
+services:
+  - docker:dind
+
+cache:
+  paths:
+    - frontend/node_modules/
+    - backend/_build/
+    - backend/deps/
+
+before_script:
+  - docker info || true
+
+# Build frontend Docker image
+build_frontend:
+  stage: build
+  image: docker:stable
+  script:
+    - docker build -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
+      -f frontend/Dockerfile frontend/
+  only:
+    - branches
+
+# Build backend Docker image
+build_backend:
+  stage: build
+  image: docker:stable
+  script:
+    - docker build -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA"
+      -f backend/Dockerfile backend/
+  only:
+    - branches
+
+# Test backend with Elixir
+test_backend:
+  stage: test
+  image: elixir:1.17-alpine
+  services: []
+  script:
+    - cd backend
+    - mix local.hex --force
+    - mix local.rebar --force
+    - mix deps.get
+    - MIX_ENV=test mix test
+  only:
+    - branches
+
+# Test frontend with Node.js
+test_frontend:
+  stage: test
+  image: node:20-alpine
+  script:
+    - cd frontend
+    - npm ci
+    - npm run test --if-present
+  only:
+    - branches
+
+# Push images to registry
+push_images:
+  stage: push
+  image: docker:stable
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login
+      -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
+    - docker push "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA"
+  only:
+    - main
+
+# Manual deployment to production
+deploy_prod:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deploy to production server"
+    - echo "Configure SSH and deployment script as needed"
+  when: manual
+  only:
+    - main
