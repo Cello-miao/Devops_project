@@ -85,15 +85,32 @@ test_frontend:
   only:
     - branches
 
-# Push images to registry
-push_images:
+# Build and push images to registry (main branch only)
+push_frontend:
   stage: push
   image: docker:27
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login
       -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - docker build -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
+      -t "$CI_REGISTRY_IMAGE/frontend:latest"
+      -f frontend/Dockerfile frontend/
     - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
+    - docker push "$CI_REGISTRY_IMAGE/frontend:latest"
+  only:
+    - main
+
+push_backend:
+  stage: push
+  image: docker:27
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login
+      -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - docker build -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA"
+      -t "$CI_REGISTRY_IMAGE/backend:latest"
+      -f backend/Dockerfile backend/
     - docker push "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA"
+    - docker push "$CI_REGISTRY_IMAGE/backend:latest"
   only:
     - main
 
