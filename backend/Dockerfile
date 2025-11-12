@@ -28,14 +28,14 @@ RUN mix compile
 # Build release
 RUN mix release
 
-# Production stage
-FROM alpine:3.18
+# Production stage - use same alpine version as builder
+FROM alpine:latest
 
 # Use Tsinghua mirror for faster package downloads (China)
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 
-# Install runtime dependencies
-RUN apk add --no-cache openssl ncurses-libs libstdc++ libgcc
+# Install runtime dependencies (including openssl3)
+RUN apk add --no-cache openssl ncurses-libs libstdc++ libgcc libcrypto3
 
 WORKDIR /app
 
