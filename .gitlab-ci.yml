@@ -126,6 +126,7 @@ deploy_prod:
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
   script:
     - echo "开始部署到 EC2..."
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "mkdir -p ~/app"
     # 1. 上传 docker-compose 文件
     - echo "步骤1 上传 docker-compose.prod.yml..."
     - scp -o StrictHostKeyChecking=no docker-compose.prod.yml
