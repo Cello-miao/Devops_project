@@ -114,28 +114,72 @@ push_backend:
   only:
     - main
 
-# Automatic deployment to production
+# Deploy to EC2 production server
 deploy_prod:
   stage: deploy
-  image: docker:27
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
   script:
-    - echo "Deploying to production..."
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER"
-      --password-stdin $CI_REGISTRY
-    - apk add --no-cache docker-compose
-    - export FRONTEND_IMAGE="$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
-    - export BACKEND_IMAGE="$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA"
-    - export DB_PASSWORD_PROD="${DB_PASSWORD_PROD:-changeme}"
-    - export SECRET_KEY_BASE="${SECRET_KEY_BASE:-$(openssl rand -base64 48)}"
-    - docker compose -f docker-compose.prod.yml pull
-    - docker compose -f docker-compose.prod.yml up -d
-    - docker compose -f docker-compose.prod.yml exec -T backend
-      mix ecto.migrate || echo "Migration failed or not needed"
-    - echo "Deployment completed successfully!"
-    - echo "Frontend at http://localhost (port 80)"
-    - echo "Backend at http://localhost:4000"
+    - echo "开始部署到 EC2..."
+    # 1. 上传 docker-compose 文件
+    - echo "步骤1 上传 docker-compose.prod.yml..."
+    - scp -o StrictHostKeyChecking=no docker-compose.prod.yml
+      $EC2_USER@$EC2_HOST:~/app/
+    # 2. 配置环境变量
+    - echo "步骤2 配置环境变量..."
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
+      "mkdir -p ~/app && cd ~/app &&
+      export FRONTEND_IMAGE=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA &&
+      export BACKEND_IMAGE=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA &&
+      export DB_PASSWORD=$DB_PASSWORD &&
+      export POSTGRES_PASSWORD=$DB_PASSWORD"
+    # 3. 登录到 Registry
+    - echo "步骤3 登录到 Docker Registry..."
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
+      "echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER
+      --password-stdin $CI_REGISTRY"
+    # 4. 拉取镜像
+    - echo "步骤4 拉取最新镜像..."
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
+      "cd ~/app &&
+      export FRONTEND_IMAGE=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA &&
+      export BACKEND_IMAGE=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA &&
+      docker compose -f docker-compose.prod.yml pull"
+    # 5. 启动服务
+    - echo "步骤5 启动容器..."
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
+      "cd ~/app &&
+      export FRONTEND_IMAGE=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA &&
+      export BACKEND_IMAGE=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA &&
+      export DB_PASSWORD=$DB_PASSWORD &&
+      export POSTGRES_PASSWORD=$DB_PASSWORD &&
+      docker compose -f docker-compose.prod.yml up -d"
+    # 6. 等待服务启动
+    - echo "步骤6 等待服务启动..."
+    - sleep 10
+    # 7. 运行数据库迁移
+    - echo "步骤7 运行数据库迁移..."
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
+      "cd ~/app && docker compose -f docker-compose.prod.yml
+      exec -T backend mix ecto.migrate ||
+      echo '迁移跳过（可能已运行）'"
+    # 8. 查看容器状态
+    - echo "步骤8 验证部署..."
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
+      "cd ~/app && docker compose -f docker-compose.prod.yml ps"
+    - echo "部署完成！"
+    - echo "前端 http://$EC2_HOST"
+    - echo "后端 http://$EC2_HOST:4000/api/health"
   environment:
     name: production
-    url: http://localhost
+    url: http://$EC2_HOST
   only:
     - main
+  needs:
+    - push_frontend
+    - push_backend
