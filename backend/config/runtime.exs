@@ -23,10 +23,7 @@ end
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
+      "ecto://#{System.get_env("DB_USER") || "postgres"}:#{System.get_env("DB_PASSWORD") || "postgres"}@#{System.get_env("DB_HOST") || "localhost"}/#{System.get_env("DB_NAME") || "signin_project_prod"}"
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
