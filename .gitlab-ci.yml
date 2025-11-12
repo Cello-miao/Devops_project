@@ -168,7 +168,7 @@ deploy_prod:
     - echo "步骤7 运行数据库迁移..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
       "cd app && docker compose -f docker-compose.prod.yml
-      exec -T backend mix ecto.migrate ||
+      exec -T backend /app/bin/signin_project eval 'SigninProject.Release.migrate()' ||
       echo '迁移跳过（可能已运行）'"
     # 8. 查看容器状态
     - echo "步骤8 验证部署..."
