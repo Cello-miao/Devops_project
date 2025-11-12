@@ -126,15 +126,15 @@ deploy_prod:
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
   script:
     - echo "开始部署到 EC2..."
-    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "mkdir -p ~/app"
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "mkdir -p app"
     # 1. 上传配置文件
     - echo "步骤1 上传配置文件..."
-    - scp -o StrictHostKeyChecking=no docker-compose.prod.yml $EC2_USER@$EC2_HOST:~/app/
-    - scp -o StrictHostKeyChecking=no nginx.conf $EC2_USER@$EC2_HOST:~/app/
+    - scp -o StrictHostKeyChecking=no docker-compose.prod.yml $EC2_USER@$EC2_HOST:app/
+    - scp -o StrictHostKeyChecking=no nginx.conf $EC2_USER@$EC2_HOST:app/
     # 2. 配置环境变量
     - echo "步骤2 配置环境变量..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-      "mkdir -p ~/app && cd ~/app &&
+      "cd app &&
       export FRONTEND_IMAGE=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA &&
       export BACKEND_IMAGE=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA &&
       export DB_PASSWORD=$DB_PASSWORD &&
@@ -147,14 +147,14 @@ deploy_prod:
     # 4. 拉取镜像
     - echo "步骤4 拉取最新镜像..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-      "cd ~/app &&
+      "cd app &&
       export FRONTEND_IMAGE=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA &&
       export BACKEND_IMAGE=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA &&
       docker compose -f docker-compose.prod.yml pull"
     # 5. 启动服务
     - echo "步骤5 启动容器..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-      "cd ~/app &&
+      "cd app &&
       export FRONTEND_IMAGE=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA &&
       export BACKEND_IMAGE=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA &&
       export DB_PASSWORD=$DB_PASSWORD &&
@@ -166,13 +166,13 @@ deploy_prod:
     # 7. 运行数据库迁移
     - echo "步骤7 运行数据库迁移..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-      "cd ~/app && docker compose -f docker-compose.prod.yml
+      "cd app && docker compose -f docker-compose.prod.yml
       exec -T backend mix ecto.migrate ||
       echo '迁移跳过（可能已运行）'"
     # 8. 查看容器状态
     - echo "步骤8 验证部署..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-      "cd ~/app && docker compose -f docker-compose.prod.yml ps"
+      "cd app && docker compose -f docker-compose.prod.yml ps"
     - echo "部署完成！"
     - echo "前端 http://$EC2_HOST"
     - echo "后端 http://$EC2_HOST:4000/api/health"
