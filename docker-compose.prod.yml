@@ -15,11 +15,12 @@ services:
     image: ${BACKEND_IMAGE:-registry.gitlab.com/cello-miao/devops/backend:latest}
     restart: always
     environment:
+      PHX_SERVER: "true"
       DB_HOST: db
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DB_NAME: ${POSTGRES_DB:-signin_project_prod}
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-}
       MIX_ENV: prod
     depends_on:
       - db
