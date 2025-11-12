@@ -129,8 +129,8 @@ deploy_prod:
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "mkdir -p app"
     # 1. 上传配置文件
     - echo "步骤1 上传配置文件..."
-    - scp -o StrictHostKeyChecking=no docker-compose.prod.yml $EC2_USER@$EC2_HOST:app/
-    - scp -o StrictHostKeyChecking=no nginx.conf $EC2_USER@$EC2_HOST:app/
+    - cat docker-compose.prod.yml | ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cat > app/docker-compose.prod.yml"
+    - cat nginx.conf | ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cat > app/nginx.conf"
     # 2. 配置环境变量
     - echo "步骤2 配置环境变量..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
