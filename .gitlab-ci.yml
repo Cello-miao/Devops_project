@@ -159,6 +159,7 @@ deploy_prod:
       export BACKEND_IMAGE=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA &&
       export DB_PASSWORD=$DB_PASSWORD &&
       export POSTGRES_PASSWORD=$DB_PASSWORD &&
+      export SECRET_KEY_BASE=$SECRET_KEY_BASE &&
       docker compose -f docker-compose.prod.yml up -d"
     # 6. 等待服务启动
     - echo "步骤6 等待服务启动..."
