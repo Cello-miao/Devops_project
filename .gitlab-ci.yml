@@ -127,11 +127,11 @@ deploy_prod:
   script:
     - echo "Starting deployment to EC2..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "mkdir -p app"
-    # 1. Upload configuration files
+    # Step 1: Upload configuration files
     - echo "Step 1: Uploading configuration files..."
     - cat docker-compose.prod.yml | ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cat > app/docker-compose.prod.yml"
     - cat nginx.conf | ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cat > app/nginx.conf"
-    # 2. Create .env.prod file
+    # Step 2: Create .env.prod file
     - echo "Step 2: Creating .env.prod file..."
     - |
       ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cat > app/.env.prod" << EOF
@@ -156,16 +156,16 @@ deploy_prod:
       BACKEND_IMAGE=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
       FRONTEND_IMAGE=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
       EOF
-    # 3. Login to Registry
+    # Step 3: Login to Docker Registry
     - echo "Step 3: Logging in to Docker Registry..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY"
-    # 4. Pull images
+    # Step 4: Pull images
     - echo "Step 4: Pulling latest images..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd app && docker compose -f docker-compose.prod.yml --env-file .env.prod pull"
-    # 5. Start services
+    # Step 5: Start services
     - echo "Step 5: Starting containers..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd app && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d"
-    # 6. Wait for services and verify health
+    # Step 6: Wait for services and verify health
     - echo "Step 6: Waiting for services to start..."
     - sleep 10
     - echo "Verifying service health..."
@@ -189,7 +189,7 @@ deploy_prod:
         fi
         echo 'Database connection is healthy'
       "
-    # 7. Run database migrations
+    # Step 7: Run database migrations
     - echo "Step 7: Running database migrations..."
     - |
       ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "
@@ -220,7 +220,7 @@ deploy_prod:
           fi
         fi
       "
-    # 8. Verify deployment
+    # Step 8: Verify deployment
     - echo "Step 8: Verifying deployment..."
     - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd app && docker compose -f docker-compose.prod.yml --env-file .env.prod ps"
     - echo "Deployment completed!"
