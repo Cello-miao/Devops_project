@@ -140,18 +140,18 @@ deploy_prod:
       POSTGRES_USER=postgres
       POSTGRES_PASSWORD=$DB_PASSWORD
       POSTGRES_DB=signin_project_prod
-      
+
       # Backend Configuration
       SECRET_KEY_BASE=$SECRET_KEY_BASE
       PHX_SERVER=true
       MIX_ENV=prod
-      
+
       # Database Connection
       DB_HOST=db
       DB_USER=postgres
       DB_PASSWORD=$DB_PASSWORD
       DB_NAME=signin_project_prod
-      
+
       # Docker Images (from GitLab CI/CD)
       BACKEND_IMAGE=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
       FRONTEND_IMAGE=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
@@ -178,20 +178,20 @@ deploy_prod:
         cd app
         # Check if backend container is running
         if ! docker compose -f docker-compose.prod.yml --env-file .env.prod ps backend | grep -q 'Up'; then
-          echo '❌ Error: Backend container failed to start'
+          echo 'Error: Backend container failed to start'
           docker compose -f docker-compose.prod.yml --env-file .env.prod logs backend
           exit 1
         fi
-        echo '✅ Backend container is running'
-        
+        echo 'Backend container is running'
+
         # Check database connection
         echo 'Checking database connection...'
         if ! docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T db pg_isready -U postgres; then
-          echo '❌ Error: Database is not ready'
+          echo 'Error: Database is not ready'
           docker compose -f docker-compose.prod.yml --env-file .env.prod logs db
           exit 1
         fi
-        echo '✅ Database connection is healthy'
+        echo 'Database connection is healthy'
       "
     # 7. Run database migrations
     - echo "Step 7: Running database migrations..."
@@ -199,27 +199,27 @@ deploy_prod:
       ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "
         cd app
         echo 'Starting database migration...'
-        
+
         # Attempt to run migrations
         if docker compose -f docker-compose.prod.yml --env-file .env.prod \
           exec -T backend /app/bin/signin_project eval 'SigninProject.Release.migrate()'; then
-          echo '✅ Database migration completed successfully'
+          echo 'Database migration completed successfully'
         else
           MIGRATE_EXIT_CODE=\$?
-          echo '⚠️  Migration returned exit code: '\$MIGRATE_EXIT_CODE
-          
+          echo 'Migration returned exit code: '\$MIGRATE_EXIT_CODE
+
           # Check migration status
           echo 'Checking migration status...'
           docker compose -f docker-compose.prod.yml --env-file .env.prod \
             exec -T backend /app/bin/signin_project eval 'Ecto.Migrator.migrated_versions(SigninProject.Repo) |> IO.inspect(label: \"Completed migrations\")'
-          
+
           # Show recent logs for debugging
           echo '=== Recent Backend Logs ==='
           docker compose -f docker-compose.prod.yml --env-file .env.prod logs --tail=50 backend
-          
+
           # Log warning but continue deployment
           if [ \$MIGRATE_EXIT_CODE -ne 0 ]; then
-            echo '❌ Database migration failed, but continuing deployment (manual check may be required)'
+            echo 'Database migration failed, but continuing deployment (manual check may be required)'
             # Do not exit, allow deployment to continue with warning
           fi
         fi
