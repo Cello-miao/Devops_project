@@ -158,17 +158,13 @@ deploy_prod:
       EOF
     # 3. Login to Registry
     - echo "Step 3: Logging in to Docker Registry..."
-    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-      "echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER
-      --password-stdin $CI_REGISTRY"
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY"
     # 4. Pull images
     - echo "Step 4: Pulling latest images..."
-    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-      "cd app && docker compose -f docker-compose.prod.yml --env-file .env.prod pull"
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd app && docker compose -f docker-compose.prod.yml --env-file .env.prod pull"
     # 5. Start services
     - echo "Step 5: Starting containers..."
-    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-      "cd app && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d"
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd app && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d"
     # 6. Wait for services and verify health
     - echo "Step 6: Waiting for services to start..."
     - sleep 10
@@ -226,8 +222,7 @@ deploy_prod:
       "
     # 8. Verify deployment
     - echo "Step 8: Verifying deployment..."
-    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-      "cd app && docker compose -f docker-compose.prod.yml --env-file .env.prod ps"
+    - ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "cd app && docker compose -f docker-compose.prod.yml --env-file .env.prod ps"
     - echo "Deployment completed!"
     - echo "Frontend: http://$EC2_HOST"
     - echo "Backend API: http://$EC2_HOST/api"
