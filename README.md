@@ -121,7 +121,7 @@ npm run dev
 
 Frontend runs at: http://localhost:5173
 
-## � How to Deploy It
+## How to Deploy It
 
 ### Deployment Architecture
 
@@ -582,21 +582,13 @@ docker compose config
 docker compose exec backend env
 ```
 
-## � Security Notes
+## Security Notes
 
 1. **Never commit secrets** - Use `.env` files and keep them gitignored
 2. **Use strong passwords** - Generate with `openssl rand -base64 32`
 3. **Rotate secrets regularly** - Update GitLab CI/CD variables
 4. **Limit EC2 access** - Configure security groups properly
 5. **Use HTTPS in production** - Set up SSL/TLS certificates (Let's Encrypt)
-
-## �📄 License
-
-[Your License Here]
-
-## 👥 Contributors
-
-- Cello-miao - Initial work and DevOps setup
 
 ## 🤝 Contributing
 
