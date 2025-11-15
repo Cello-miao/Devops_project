@@ -176,7 +176,7 @@ deploy_prod:
       "cd app && docker compose -f docker-compose.prod.yml ps"
     - echo "部署完成！"
     - echo "前端 http://$EC2_HOST"
-    - echo "后端 http://$EC2_HOST:4000/api/health"
+    - echo "后端 http://$EC2_HOST/api"
   environment:
     name: production
     url: http://$EC2_HOST

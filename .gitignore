@@ -57,3 +57,9 @@ Thumbs.db
 .cache
 coverage/
 *.coverdata
+.secret_key_base.txt
+
+# GitHub push scripts (local use only)
+PUSH_TO_GITHUB.md
+push-to-github.sh
+GITLAB_CI_EXPLAINED.md

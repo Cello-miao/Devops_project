@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: signin_project_dev
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-signin_project_dev}
     # Remove port mapping - database only accessible within Docker network
     # If you need to access DB from host, use: docker exec -it devops_project_new-db-1 psql -U postgres
     # ports:
@@ -17,13 +17,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     environment:
-      DB_HOST: db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: signin_project_dev
-      MIX_ENV: dev
-      SECRET_KEY_BASE: "dev_secret_key_base_at_least_64_chars_long_for_development_only"
-      PHX_HOST: localhost
+      DB_HOST: ${DB_HOST:-db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-signin_project_dev}
+      MIX_ENV: ${MIX_ENV:-dev}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      PHX_HOST: ${PHX_HOST:-localhost}
     ports:
       - '4000:4000'
     volumes:
@@ -40,7 +40,7 @@ services:
       dockerfile: Dockerfile.dev
     environment:
       # Set Vite proxy target to backend service name in Docker network
-      VITE_API_TARGET: http://backend:4000
+      VITE_API_TARGET: ${VITE_API_TARGET:-http://backend:4000}
     ports:
       - '5173:5173'
     volumes:
